@@ -2,6 +2,7 @@
 
 namespace Laravel\Envoy\Console;
 
+use Laravel\Envoy\RemoteProcessor;
 use Laravel\Envoy\SSH;
 use Laravel\Envoy\Task;
 use Laravel\Envoy\Compiler;
@@ -43,7 +44,8 @@ class RunCommand extends \Symfony\Component\Console\Command\Command
         $this->setName('run')
                 ->setDescription('Run an Envoy task.')
                 ->addArgument('task', InputArgument::REQUIRED)
-                ->addOption('pretend', null, InputOption::VALUE_NONE, 'Dump Bash script for inspection.');
+                ->addOption('pretend', null, InputOption::VALUE_NONE, 'Dump Bash script for inspection.')
+                ->addOption( 'ssh_identity', null, InputOption::VALUE_OPTIONAL, 'SSH Identity File to Use' );
     }
 
     /**
@@ -244,6 +246,13 @@ class RunCommand extends \Symfony\Component\Console\Command\Command
      */
     protected function getRemoteProcessor(Task $task)
     {
-        return $task->parallel ? new ParallelSSH : new SSH;
+        /** @var RemoteProcessor $processor */
+        $processor = $task->parallel ? new ParallelSSH : new SSH;
+
+        if ( ! empty( $file = $this->option( 'ssh_identity' ) ) ) {
+            $processor->setIdentityFile( $file );
+        }
+
+        return $processor;
     }
 }

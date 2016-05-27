@@ -7,6 +7,14 @@ use Symfony\Component\Process\Process;
 
 abstract class RemoteProcessor
 {
+
+    /**
+     * SSH Identity file to be used for remote connections.
+     *
+     * @var string
+     */
+    protected $identityFile;
+
     /**
      * Run the given task over SSH.
      *
@@ -14,6 +22,18 @@ abstract class RemoteProcessor
      * @return void
      */
     abstract public function run(Task $task, Closure $callback = null);
+
+    /**
+     * Set the identity file to be used for remote SSH connections.
+     *
+     * @param $path
+     */
+    public function setIdentityFile( $path )
+    {
+        if ( file_exists( $path ) ) {
+            $this->identityFile = $path;
+        }
+    }
 
     /**
      * Run the given script on the given host.
@@ -35,12 +55,15 @@ abstract class RemoteProcessor
         // these lines of output back to the parent callback for display purposes.
         else {
             $delimiter = 'EOF-LARAVEL-ENVOY';
+            $identity = ( ! empty( $this->identityFile ) ? "-i ".$this->identityFile . ' ' : '' );
 
             $process = new Process(
-                "ssh $target 'bash -se' << \\$delimiter".PHP_EOL
-                    .'set -e'.PHP_EOL
-                    .$task->script.PHP_EOL
-                    .$delimiter
+                "ssh $target "
+                    . $identity
+                    . "'bash -se' << \\$delimiter".PHP_EOL
+                    . 'set -e'.PHP_EOL
+                    . $task->script.PHP_EOL
+                    . $delimiter
             );
         }
 
