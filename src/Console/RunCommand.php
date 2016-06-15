@@ -45,7 +45,7 @@ class RunCommand extends \Symfony\Component\Console\Command\Command
                 ->setDescription('Run an Envoy task.')
                 ->addArgument('task', InputArgument::REQUIRED)
                 ->addOption('pretend', null, InputOption::VALUE_NONE, 'Dump Bash script for inspection.')
-                ->addOption( 'ssh_identity', null, InputOption::VALUE_OPTIONAL, 'SSH Identity File to Use' );
+                ->addOption( 'ssh_params', null, InputOption::VALUE_OPTIONAL, 'Extra SSH parameters to Use when connecting to servers' );
     }
 
     /**
@@ -249,8 +249,8 @@ class RunCommand extends \Symfony\Component\Console\Command\Command
         /** @var RemoteProcessor $processor */
         $processor = $task->parallel ? new ParallelSSH : new SSH;
 
-        if ( ! empty( $file = $this->option( 'ssh_identity' ) ) ) {
-            $processor->setIdentityFile( $file );
+        if ( ! empty( $params = $this->option( 'ssh_params' ) ) ) {
+            $processor->setExtraParams( $params );
         }
 
         return $processor;

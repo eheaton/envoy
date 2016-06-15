@@ -9,11 +9,11 @@ abstract class RemoteProcessor
 {
 
     /**
-     * SSH Identity file to be used for remote connections.
+     * Extra parameters to be sent along with te SSH connection.
      *
      * @var string
      */
-    protected $identityFile;
+    protected $extraParams;
 
     /**
      * Run the given task over SSH.
@@ -24,15 +24,13 @@ abstract class RemoteProcessor
     abstract public function run(Task $task, Closure $callback = null);
 
     /**
-     * Set the identity file to be used for remote SSH connections.
+     * Set any extra params to be used for remote SSH connections.
      *
-     * @param $path
+     * @param $params
      */
-    public function setIdentityFile( $path )
+    public function setExtraParams( $params )
     {
-        if ( file_exists( $path ) ) {
-            $this->identityFile = $path;
-        }
+        $this->extraParams = $params;
     }
 
     /**
@@ -55,11 +53,11 @@ abstract class RemoteProcessor
         // these lines of output back to the parent callback for display purposes.
         else {
             $delimiter = 'EOF-LARAVEL-ENVOY';
-            $identity = ( ! empty( $this->identityFile ) ? "-i ".$this->identityFile . ' ' : '' );
+            $extraParams = ( ! empty( $this->extraParams ) ? $this->extraParams . ' ' : '' );
 
             $process = new Process(
                 "ssh $target "
-                    . $identity
+                    . $extraParams
                     . "'bash -se' << \\$delimiter".PHP_EOL
                     . 'set -e'.PHP_EOL
                     . $task->script.PHP_EOL
